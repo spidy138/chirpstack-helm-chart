@@ -67,10 +67,14 @@ spec:
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.chirpstack.image.repository }}:{{ .Values.chirpstack.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.chirpstack.image.pullPolicy }}                                                            
-          {{- with .Values.chirpstack.args }}                                                                                   
-          args:                                                                                                                 
-          {{- toYaml . | nindent 12 }}                                                                                        
+          imagePullPolicy: {{ .Values.chirpstack.image.pullPolicy }}
+          {{- with .Values.chirpstack.command }}
+          command:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.chirpstack.args }}
+          args:
+          {{- toYaml . | nindent 12 }}
           {{- end }}                                                                                                            
           securityContext:                                                                                                      
           {{- toYaml .Values.securityContext | nindent 12 }}

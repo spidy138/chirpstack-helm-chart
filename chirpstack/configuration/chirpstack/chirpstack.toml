@@ -89,5 +89,10 @@
   enabled=["mqtt"]
 
   [integration.mqtt]
-    server="tcp://$MQTT_BROKER_HOST:8883/"
+    # server="tcp://$MQTT_BROKER_HOST:8883/"
+    # json=true
+    server="ssl://$MQTT_BROKER_HOST:$MQTT_BROKER_PORT/"
     json=true
+    ca_cert="$CA_CERT_PATH"
+    tls_cert="$TLS_CERT_PATH"
+    tls_key="$TLS_KEY_PATH"

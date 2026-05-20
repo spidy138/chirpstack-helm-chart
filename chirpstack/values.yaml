@@ -5,6 +5,7 @@ createNamespace: false
 
 gatewaybridgebasicstation:
   replicaCount: 1
+  command: []
   args:
     - -c
     - /etc/chirpstack-gateway-bridge/chirpstack-gateway-bridge-basicstation-in865.toml
@@ -18,8 +19,12 @@ gatewaybridgebasicstation:
     secret: true
   configMapData:
     MQTT_BROKER_HOST: vernemq.vernemq
+    MQTT_BROKER_PORT: 8883
     REDIS_HOST: "redis.chirpstack"
     REDIS_PORT: 6379
+    CA_CERT_PATH: /etc/ssl/vernemq/ca.crt
+    TLS_CERT_PATH: /etc/ssl/vernemq/cert.crt
+    TLS_KEY_PATH: /etc/ssl/vernemq/key.key
   secret:
     name: gateway-bridge-basicstation-secret
     values:
@@ -37,7 +42,10 @@ gatewaybridgebasicstation:
 
 gatewaybridge:
   replicaCount: 1
-  args: []
+  command: []
+  args:
+    - -c
+    - /etc/chirpstack-gateway-bridge/chirpstack-gateway-bridge.toml
   image:
     repository: chirpstack/chirpstack-gateway-bridge
     pullPolicy: IfNotPresent
@@ -50,9 +58,13 @@ gatewaybridge:
     MQTT_BROKER_HOST: vernemq.vernemq
     INTEGRATION__MQTT__EVENT_TOPIC_TEMPLATE: in865/gateway/{{ .GatewayID }}/event/{{ .EventType }}
     INTEGRATION__MQTT__STATE_TOPIC_TEMPLATE: in865/gateway/{{ .GatewayID }}/state/{{ .StateType }}
-    INTEGRATION__MQTT__COMMAND_TOPIC_TEMPLATE: in865868/gateway/{{ .GatewayID }}/command/#
+    INTEGRATION__MQTT__COMMAND_TOPIC_TEMPLATE: in865/gateway/{{ .GatewayID }}/command/#
     REDIS_HOST: "redis.chirpstack"
     REDIS_PORT: 6379
+    CA_CERT_PATH: /etc/ssl/vernemq/ca.crt
+    TLS_CERT_PATH: /etc/ssl/vernemq/cert.crt
+    TLS_KEY_PATH: /etc/ssl/vernemq/key.key
+    MQTT_BROKER_PORT: 8883
   secret:
     name: gateway-bridge-secret
     values:
@@ -70,6 +82,7 @@ gatewaybridge:
 
 chirpstack:
   replicaCount: 1
+  command: []
   args:
     - -c
     - /etc/chirpstack
@@ -85,16 +98,20 @@ chirpstack:
     REDIS_DATABASE: 0
     REDIS_tlsEnabled: false
     REDIS_keyPrefix: "chirpstack"
-    REDIS_HOST: "redis.chirpstack"
-    REDIS_PORT: "6379"
     REDIS_PASSWORD: "password"
-    POSTGRES_HOST: "postgres.chirpstack"
-    POSTGRES_PORT: "5432"
-    POSTGRES_USER: "chirpstack"
-    POSTGRES_PASSWORD: "chirpstack"
-    POSTGRES_DB: "chirpstack"
+    POSTGRESQL_HOST: "postgres.chirpstack"
+    POSTGRESQL_PORT: "5432"
+    POSTGRESQL_USER: "chirpstack"
+    POSTGRESQL_PASSWORD: "chirpstack"
+    POSTGRESQL_DB: "chirpstack"
     API_SECRET: "secret"
-    MQTT_BROKER_HOST: "vernemq.vernemq"
+    MQTT_BROKER_HOST: vernemq.vernemq
+    MQTT_BROKER_PORT: 8883
+    REDIS_HOST: "redis.chirpstack"
+    REDIS_PORT: 6379
+    CA_CERT_PATH: /etc/ssl/vernemq/ca.crt
+    TLS_CERT_PATH: /etc/ssl/vernemq/cert.crt
+    TLS_KEY_PATH: /etc/ssl/vernemq/key.key      
 
   # Redis configuration
   redis:
@@ -116,11 +133,12 @@ chirpstack:
       REDIS_HOST: "redis.chirpstack"
       REDIS_PORT: "6379"
       REDIS_PASSWORD: "password"
-      POSTGRES_HOST: "postgres.chirpstack"
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: "chirpstack"
+      POSTGRESQL_HOST: "postgres.chirpstack"
+      POSTGRESQL_PORT: "5432"
+      POSTGRESQL_USER: "chirpstack"
+      POSTGRESQL_PASSWORD: "chirpstack"
       POSTGRES_PASSWORD: "chirpstack"
-      POSTGRES_DB: "chirpstack"
+      POSTGRESQL_DB: "chirpstack"
 
   autoscaling:
     enabled: false

@@ -2,7 +2,7 @@
 # configuration example and documentation.
 
 [integration.mqtt.auth.generic]
-servers=["tcp://mosquitto:1883"]
+servers=["ssl://$MQTT_BROKER_HOST:$MQTT_BROKER_PORT"]
 username=""
 password=""
 
@@ -16,9 +16,9 @@ type="basic_station"
 
   [backend.basic_station]
   bind=":3001"
-  tls_cert=""
-  tls_key=""
-  ca_cert=""
+  tls_cert="$TLS_CERT_PATH"
+  tls_key="$TLS_KEY_PATH"
+  ca_cert="$CA_CERT_PATH"
 
   region="IN865"
   frequency_min=865000000

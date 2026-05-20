@@ -35,9 +35,13 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.gatewaybridge.image.repository }}:{{ .Values.gatewaybridge.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.gatewaybridge.image.pullPolicy }}
-          {{- with .Values.gatewaybridge.args }}                                                                                   
-          args:                                                                                                                 
-          {{- toYaml . | nindent 12 }}                                                                                        
+          {{- with .Values.gatewaybridge.command }}
+          command:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.gatewaybridge.args }}
+          args:
+          {{- toYaml . | nindent 12 }}
           {{- end }}  
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
