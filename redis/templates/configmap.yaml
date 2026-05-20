@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "redis.fullname" . }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "redis.labels" . | nindent 4 }}
+data:
+  redis.conf: |
+    # Authentication
+    requirepass {{ .Values.redis.password }}
+
+    # Memory management
+    maxmemory {{ .Values.redis.config.maxmemory }}
+    maxmemory-policy {{ index .Values.redis.config "maxmemory-policy" }}
+
+    # Persistence
+    save {{ index .Values.redis.config "save" }}
+    appendonly {{ .Values.redis.config.appendonly }}
+    appendfsync {{ .Values.redis.config.appendfsync }}
+
+    # Replication
+    replica-serve-stale-data {{ index .Values.redis.config "replica-serve-stale-data" }}
+    replica-read-only {{ index .Values.redis.config "replica-read-only" }}
+
+    # Slow log
+    slowlog-log-slower-than {{ index .Values.redis.config "slowlog-log-slower-than" }}
+    slowlog-max-len {{ index .Values.redis.config "slowlog-max-len" }}
+
+    # Other
+    databases {{ .Values.redis.config.databases }}
+    tcp-backlog {{ index .Values.redis.config "tcp-backlog" }}
+    timeout {{ .Values.redis.config.timeout }}
+    tcp-keepalive {{ index .Values.redis.config "tcp-keepalive" }}

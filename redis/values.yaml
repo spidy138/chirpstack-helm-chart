@@ -1,0 +1,114 @@
+replicaCount: 1
+nameOverride: ""
+fullnameOverride: "redis"
+namespace: "chirpstack"
+createNamespace: false
+
+image:
+  repository: redis
+  pullPolicy: IfNotPresent
+  tag: "7-alpine"
+
+imagePullSecrets: []
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9121"
+
+podSecurityContext:
+  fsGroup: 999
+  runAsUser: 999
+  runAsNonRoot: true
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+service:
+  type: ClusterIP
+  port: 6379
+  targetPort: 6379
+  annotations: {}
+
+persistence:
+  enabled: true
+  storageClassName: "local-path"
+  accessMode: ReadWriteOnce
+  size: 5Gi
+  mountPath: /data
+
+redis:
+  host: "redis.chirpstack"
+  port: 6379
+  password: "password"
+
+  # Redis configuration
+  config:
+    # Memory management
+    maxmemory: 512mb
+    maxmemory-policy: allkeys-lru
+
+    # Persistence
+    save: "900 1 300 10 60 10000"
+    appendonly: "no"
+    appendfsync: everysec
+
+    # Replication
+    replica-serve-stale-data: "yes"
+    replica-read-only: "yes"
+
+    # Slow log
+    slowlog-log-slower-than: 10000
+    slowlog-max-len: 128
+
+    # Other
+    databases: 16
+    tcp-backlog: 511
+    timeout: 0
+    tcp-keepalive: 300
+
+livenessProbe:
+  enabled: true
+  exec:
+    command:
+      - redis-cli
+      - ping
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  exec:
+    command:
+      - redis-cli
+      - ping
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 1
+  failureThreshold: 3
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
