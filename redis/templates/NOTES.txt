@@ -1,0 +1,158 @@
+================================================================================
+                        Redis Helm Chart - ChirpStack
+================================================================================
+
+Redis {{ .Chart.AppVersion }} has been deployed successfully!
+
+Release: {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+
+================================================================================
+REDIS ACCESS
+================================================================================
+
+Service Information:
+  - Service Name: redis.{{ .Release.Namespace }}
+  - Port: 6379
+  - Type: ClusterIP
+
+Connect from within the cluster:
+  redis-cli -h redis.{{ .Release.Namespace }}
+
+Port forward to your local machine:
+  kubectl port-forward svc/redis 6379:6379 -n {{ .Release.Namespace }}
+
+================================================================================
+CREDENTIALS
+================================================================================
+
+Default password: password (CHANGE in production!)
+
+To change password:
+  kubectl exec redis-0 -n {{ .Release.Namespace }} -- redis-cli CONFIG SET requirepass "new-password"
+
+================================================================================
+PERSISTENCE & STORAGE
+================================================================================
+
+Storage:
+  - Storage Class: local-path
+  - Size: 5Gi (adjust in values.yaml)
+  - Mount Path: /data
+
+Check persistent volume:
+  kubectl get pvc -n {{ .Release.Namespace }}
+
+================================================================================
+MONITORING & METRICS
+================================================================================
+
+Prometheus metrics enabled:
+  - prometheus.io/scrape: "true"
+  - prometheus.io/port: "9121"
+
+Check Redis info:
+  kubectl exec redis-0 -n {{ .Release.Namespace }} -- redis-cli INFO
+
+Memory usage:
+  kubectl exec redis-0 -n {{ .Release.Namespace }} -- redis-cli INFO memory
+
+Current connections:
+  kubectl exec redis-0 -n {{ .Release.Namespace }} -- redis-cli INFO clients
+
+================================================================================
+USEFUL COMMANDS
+================================================================================
+
+Test connection:
+  kubectl exec redis-0 -n {{ .Release.Namespace }} -- redis-cli PING
+
+Get key count:
+  kubectl exec redis-0 -n {{ .Release.Namespace }} -- redis-cli DBSIZE
+
+Backup (snapshot):
+  kubectl exec redis-0 -n {{ .Release.Namespace }} -- redis-cli BGSAVE
+
+Check memory:
+  kubectl exec redis-0 -n {{ .Release.Namespace }} -- redis-cli INFO memory
+
+View logs:
+  kubectl logs -f redis-0 -n {{ .Release.Namespace }}
+
+================================================================================
+SECURITY RECOMMENDATIONS
+================================================================================
+
+For production:
+  1. Change default password IMMEDIATELY
+  2. Disable dangerous commands (FLUSHDB, FLUSHALL, etc.)
+  3. Use network policies to restrict access
+  4. Enable encryption/TLS
+  5. Monitor for suspicious activity
+  6. Set up automated backups
+  7. Configure memory limits and eviction policies
+
+Disable dangerous commands:
+  kubectl exec redis-0 -n {{ .Release.Namespace }} -- redis-cli CONFIG SET rename-command FLUSHALL ""
+
+================================================================================
+BACKUP & RECOVERY
+================================================================================
+
+Manual backup:
+  kubectl exec redis-0 -n {{ .Release.Namespace }} -- redis-cli SAVE
+
+Automatic background save:
+  kubectl exec redis-0 -n {{ .Release.Namespace }} -- redis-cli BGSAVE
+
+Copy RDB file:
+  kubectl cp {{ .Release.Namespace }}/redis-0:/data/dump.rdb ./dump.rdb
+
+For production, implement:
+  - Automated RDB snapshots
+  - AOF (Append-Only File) replication
+  - Redis Sentinel for HA
+  - Redis Cluster for scaling
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Check pod status:
+  kubectl get pods -n {{ .Release.Namespace }}
+
+View logs:
+  kubectl logs -f redis-0 -n {{ .Release.Namespace }}
+
+Test connection:
+  kubectl exec redis-0 -n {{ .Release.Namespace }} -- redis-cli PING
+
+Describe pod:
+  kubectl describe pod redis-0 -n {{ .Release.Namespace }}
+
+Check disk usage:
+  kubectl exec redis-0 -n {{ .Release.Namespace }} -- df -h /data
+
+If out of memory:
+  1. Increase maxmemory limit
+  2. Configure eviction policy
+  3. Clean up unused keys
+  4. Check for memory leaks
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. Change default password immediately
+2. Set up monitoring with Prometheus
+3. Configure backup strategy
+4. Test connectivity from ChirpStack pods
+5. Disable dangerous commands
+6. Plan high availability solution
+
+================================================================================
+
+For Redis documentation: https://redis.io/documentation
+For ChirpStack Redis usage: https://www.chirpstack.io/docs/
+
+================================================================================
