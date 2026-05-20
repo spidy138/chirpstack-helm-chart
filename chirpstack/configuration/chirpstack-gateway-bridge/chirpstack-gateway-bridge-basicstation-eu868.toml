@@ -6,6 +6,9 @@
 servers=["ssl://$MQTT_BROKER_HOST:$MQTT_BROKER_PORT"]
 username=""
 password=""
+ca_cert="$CA_CERT_PATH"
+tls_cert="$TLS_CERT_PATH"
+tls_key="$TLS_KEY_PATH"
 
 [integration.mqtt]
 event_topic_template="eu868/gateway/{{ .GatewayID }}/event/{{ .EventType }}"
