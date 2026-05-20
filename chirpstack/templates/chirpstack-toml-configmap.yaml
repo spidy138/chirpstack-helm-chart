@@ -1,0 +1,46 @@
+{{- if .Values.chirpstack.enabled.configMap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chirpstack.fullname" . }}-toml-config
+  namespace: {{ .Values.namespace }}
+data:
+  chirpstack.toml: |
+    # Logging.
+    [logging]
+      level="info"
+
+    # PostgreSQL configuration.
+    [postgresql]
+      dsn="postgres://{{ .Values.chirpstack.postgresql.username }}:{{ .Values.chirpstack.postgresql.password }}@{{ .Values.chirpstack.postgresql.host }}:{{ .Values.chirpstack.postgresql.port }}/{{ .Values.chirpstack.postgresql.database }}?sslmode=disable"
+      max_open_connections=10
+      min_idle_connections=0
+
+    # Redis configuration.
+    [redis]
+      servers=[
+        "redis://:{{ .Values.chirpstack.redis.password }}@{{ .Values.chirpstack.redis.host }}:{{ .Values.chirpstack.redis.port }}/",
+      ]
+      tls_enabled=false
+      cluster=false
+
+    # Network related configuration.
+    [network]
+      net_id="000000"
+      enabled_regions=[
+        "in865"
+      ]
+
+    # API interface configuration.
+    [api]
+      bind="0.0.0.0:8080"
+      secret="you-must-replace-this"
+
+    # Integration configuration.
+    [integration]
+      enabled=["mqtt"]
+
+      [integration.mqtt]
+        server="tcp://vernemq.vernemq:1883/"
+        json=true
+{{- end }}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: chirpstack
+description: A Helm chart for deploying ChirpStack with external PostgreSQL, Azure Redis, and VerneMQ
+type: application
+version: 0.1.0
+appVersion: "4.10.0"

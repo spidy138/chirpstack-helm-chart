@@ -1,0 +1,17 @@
+{{- if .Values.gatewaybridgebasicstation.enabled.configMap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gatewaybridgebasicstation.fullname" . }}-config
+  namespace: {{ .Values.namespace }}
+data:
+{{- range $key, $val := .Values.gatewaybridgebasicstation.configMapData }}
+  {{ $key }}: {{ $val | quote }}
+{{- end }}
+{{- if .Values.gatewaybridgebasicstation.tomlFiles }}
+{{- range $name, $content := .Values.gatewaybridgebasicstation.tomlFiles }}
+  {{ $name }}: |
+{{ $content | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,286 @@
+nameOverride: ""
+fullnameOverride: "chirpstack"
+namespace: "chirpstack"
+createNamespace: false
+
+gatewaybridgebasicstation:
+  replicaCount: 1
+  args:
+    - -c
+    - /etc/chirpstack-gateway-bridge/chirpstack-gateway-bridge-basicstation-in865.toml
+  image:
+    repository: chirpstack/chirpstack-gateway-bridge
+    pullPolicy: IfNotPresent
+    tag: "4"
+  enabled:
+    deployment: true
+    configMap: true
+    secret: true
+  configMapData:
+    MQTT_BROKER_HOST: vernemq.vernemq
+    REDIS_HOST: "redis.chirpstack"
+    REDIS_PORT: 6379
+  secret:
+    name: gateway-bridge-basicstation-secret
+    values:
+      REDIS_PASSWORD: "password"
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+  service:
+    type: ClusterIP
+    port: 3001
+    targetPort: 3001
+    containerPort: 3001
+
+gatewaybridge:
+  replicaCount: 1
+  args: []
+  image:
+    repository: chirpstack/chirpstack-gateway-bridge
+    pullPolicy: IfNotPresent
+    tag: "4"
+  enabled:
+    deployment: true
+    configMap: true
+    secret: true
+  configMapData:
+    MQTT_BROKER_HOST: vernemq.vernemq
+    INTEGRATION__MQTT__EVENT_TOPIC_TEMPLATE: in865/gateway/{{ .GatewayID }}/event/{{ .EventType }}
+    INTEGRATION__MQTT__STATE_TOPIC_TEMPLATE: in865/gateway/{{ .GatewayID }}/state/{{ .StateType }}
+    INTEGRATION__MQTT__COMMAND_TOPIC_TEMPLATE: in865868/gateway/{{ .GatewayID }}/command/#
+    REDIS_HOST: "redis.chirpstack"
+    REDIS_PORT: 6379
+  secret:
+    name: gateway-bridge-secret
+    values:
+      REDIS_PASSWORD: "password"
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+  service:
+    type: LoadBalancer
+    port: 1700
+    targetPort: 1700
+    containerPort: 1700
+
+chirpstack:
+  replicaCount: 1
+  args:
+    - -c
+    - /etc/chirpstack
+  image:
+    repository: chirpstack/chirpstack
+    pullPolicy: IfNotPresent
+    tag: "4"
+  enabled:
+    deployment: true
+    configMap: true
+    secret: true
+  configMapData:
+    REDIS_DATABASE: 0
+    REDIS_tlsEnabled: false
+    REDIS_keyPrefix: "chirpstack"
+    REDIS_HOST: "redis.chirpstack"
+    REDIS_PORT: "6379"
+    REDIS_PASSWORD: "password"
+    POSTGRES_HOST: "postgres.chirpstack"
+    POSTGRES_PORT: "5432"
+    POSTGRES_USER: "chirpstack"
+    POSTGRES_PASSWORD: "chirpstack"
+    POSTGRES_DB: "chirpstack"
+    API_SECRET: "secret"
+    MQTT_BROKER_HOST: "vernemq.vernemq"
+
+  # Redis configuration
+  redis:
+    host: "redis.chirpstack"
+    port: 6379
+    password: "password"
+
+  # PostgreSQL configuration
+  postgresql:
+    host: "postgres.chirpstack"
+    port: 5432
+    username: "chirpstack"
+    password: "chirpstack"
+    database: "chirpstack"
+
+  secret:
+    name: chirpstack-secret
+    values:
+      REDIS_HOST: "redis.chirpstack"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: "password"
+      POSTGRES_HOST: "postgres.chirpstack"
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: "chirpstack"
+      POSTGRES_PASSWORD: "chirpstack"
+      POSTGRES_DB: "chirpstack"
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+  service:
+    type: LoadBalancer
+    port: 8080
+    targetPort: 8080
+    containerPort: 8080
+
+restapi:
+  replicaCount: 1
+  args:
+    - --server
+    - chirpstack:8080
+    - --bind
+    - 0.0.0.0:8090
+    - --insecure
+  image:
+    repository: chirpstack/chirpstack-rest-api
+    pullPolicy: IfNotPresent
+    tag: "4"
+  enabled:
+    deployment: true
+    configMap: false
+    secret: false
+  configMapData:
+    REDIS_DATABASE: 0
+    REDIS_tlsEnabled: false
+    REDIS_keyPrefix: "chirpstack"
+    REDIS_HOST: "redis.chirpstack"
+    REDIS_PORT: "6379"
+    REDIS_PASSWORD: "password"
+    POSTGRESQL_HOST: "postgres.chirpstack"
+    POSTGRESQL_PORT: "5432"
+    POSTGRES_USER: "chirpstack" 
+    POSTGRESQL_PASSWORD: "chirpstack"
+    POSTGRESQL_DB: "chirpstack"
+    API_SECRET: "secret"
+    MQTT_BROKER_HOST: "vernemq.vernemq"
+  secret:
+    name: restapi-secret
+    values:
+      REDIS_PASSWORD: "password"
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+  service:
+    type: ClusterIP
+    port: 8090
+    targetPort: 8090
+    containerPort: 8090
+
+certificates:
+  ca: |
+    -----BEGIN CERTIFICATE-----
+    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
+    RAA0zBxT60qclkCqSIfFW6o=
+    -----END CERTIFICATE-----
+
+  key: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDHlghBVt5Jy8Y6
+    4R2V7GEMpVt8fxXxurmS+dNrZK1+16sFq/OzkiY6Qfd1kzGopKkNGgLRA588KShl
+    wWFFspJUViaY/vBEwoQ+ByOecV8rhmbJnzNn8j3eCBIO31vhPUHJ2+AZdF/bkmJz
+    M4kp9d+2UZpwuRH5Po0IzCB307vloBm7ipCudai0+j7FBJYjGJYQg5HJNmxKMHfX
+    iUkFayRJL2q2QxP6xR7Jl2zGVGGRBoSTb0ZY7qwv6vS9dIbQTVFCDlhzNQ1d/QaB
+    mLVASRvPsEgiC4Gojf1Dcrv3pSrB/hRW6R/7EmkFcq1j3RHhPJHMrH+JFXWC06DT
+    99VQApyNAgMBAAECggEAAZUDYL03Ct+2JQ5WxTL3+/ktlfmN63oe8XbQgbftFiXQ
+    gb2As4ozil+uffyaNquDeYqcvhpovznWS6QySLKnLUr3iFvw/KKMGM/GrQFaD0bD
+    9tIvvqGxctqehgaoPEtXg6meB6WgAuYQqLgeXLpJuTDBaCZXaaHgzVKM6VZA1Yuh
+    Pw3GEdCQQNqg1JvWiKzba8nBMJpBp1I1UKKZ3TYONDeweUoUFidbbogKd1Hsriyd
+    cqIjch+auBGe4Cfw9azl4TbOzJkRMIEdrlv7lCGE9D2Fuj+ub1Nw5DTgGu6Po8vy
+    PDKYRTXyTJFSZmCjVbyUkmZBpjqk3njvVf458c7v8wKBgQDNlPjMucSoINm/yXdi
+    +aa7l2HjTSH9bcJ6N9P90dwmylrmvGKSBdyyO0SFwG9jR3xTSHR+f3YH0khCkkoP
+    dnzHwIC7FyMuaD39BeoSHoFmEmW7RygVteeDREFSAUoshg3DMWPhTlBwh1fdGKep
+    lnwtdZKE15Ec+fzNKNtg4Ub3TwKBgQD4iJ+ApcfiERr8CEfkzZg+MJspwBww+o6x
+    kPdTq9Y9LRS6r3D0KuUtx/4lLppWMzgVkyEtueiUwf7fnVXGI26xXbvt+dNkd++7
+    JKAheXJqtWsW8lcihRFNkuVfN1IWc1WRYjdmr5uHZGulUtP6dqadg0o/cY6lWeAJ
+    qdk4iuE3YwKBgBrGxIEl0Q909+ea/gnOKoFUflN0wHCZ0zLIAryUkPAceyqCbvRF
+    /zDXt10Ua22q6e6PCV1QjLcIFJFXLH5HGImL8ThtExAAU9KY6pvhjUkWLFnwMrBh
+    OP5H7ZoYwOh7rV83F6NI6AFAH5mUlIHqL9Jb9fGHgkcb6GlwYOKFdRDRAoGBAOhy
+    Z7Pb2aHfW7yjRhKCE8T+kvCug+9vOGxs6FVyXxKiikO8eMl1IRn7dgByoNjEWM0c
+    6agpu5T+CBI+xg1l8E6lG3KM+SB7aFVBAR+txcx11y4EBGj9ydwi6rJuPDFRN5Od
+    J7G7xpwP2PosCKS1ukmRlKzX2ZFfCMIhAE/43IF/AoGBALKtmDC3ICjVAy1Xzw9S
+    4xlrQa5GhVNP+okDeLoG+mwRyQryL92RA8ZaNiDw1RmcYGCqwrXfxb9+d02L58ke
+    +i+hXrTHZVAO6iYP5JhUWBQXueaNldPmKFpRYd4Q5vdpt3LFp+0KwM4DKHuAd+CL
+    JyNlekb5L3hAmUwMbdZl1T+t
+    -----END PRIVATE KEY-----
+
+  cert: |
+    -----BEGIN CERTIFICATE-----
+    MIIE8TCCAtmgAwIBAgIUU1sJ0Mc6G279W0sqKC24NaHXvQgwDQYJKoZIhvcNAQEL
+    BQAwZjELMAkGA1UEBhMCU0cxEjAQBgNVBAgMCVNpbmdhcG9yZTESMBAGA1UEBwwJ
+    U2luZ2Fwb3JlMQ4wDAYDVQQKDAVNeU9yZzEMMAoGA1UECwwDUEtJMREwDwYDVQQD
+    DAhNeVJvb3RDQTAeFw0yNjA0MjkwNjQ1NTdaFw0yODA4MDEwNjQ1NTdaMGcxCzAJ
+    BgNVBAYTAlNHMRIwEAYDVQQIDAlTaW5nYXBvcmUxEjAQBgNVBAcMCVNpbmdhcG9y
+    ZTEOMAwGA1UECgwFTXlPcmcxDjAMBgNVBAsMBVVzZXJzMRAwDgYDVQQDDAdjbGll
+    bnQxMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAx5YIQVbeScvGOuEd
+    lexhDKVbfH8V8bq5kvnTa2StfterBavzs5ImOkH3dZMxqKSpDRoC0QOfPCkoZcFh
+    RbKSVFYmmP7wRMKEPgcjnnFfK4ZmyZ8zZ/I93ggSDt9b4T1BydvgGXRf25JiczOJ
+    KfXftlGacLkR+T6NCMwgd9O75aAZu4qQrnWotPo+xQSWIxiWEIORyTZsSjB314lJ
+    BWskSS9qtkMT+sUeyZdsxlRhkQaEk29GWO6sL+r0vXSG0E1RQg5YczUNXf0GgZi1
+    QEkbz7BIIguBqI39Q3K796Uqwf4UVukf+xJpBXKtY90R4TyRzKx/iRV1gtOg0/fV
+    UAKcjQIDAQABo4GVMIGSMCsGA1UdEQQkMCKCDWNsaWVudDEubG9jYWyBEWNsaWVu
+    dDFAbXlvcmcuY29tMA4GA1UdDwEB/wQEAwIHgDATBgNVHSUEDDAKBggrBgEFBQcD
+    AjAdBgNVHQ4EFgQUvYj0J31inEdifTTuHKF1oy72sbswHwYDVR0jBBgwFoAUiyWj
+    ePh3zrD6Q7MW3pbeUu6fjqIwDQYJKoZIhvcNAQELBQADggIBAFNl4ten+qTUKRty
+    oUg+z2RbjNwIeS5IJ6QUcKM0ICFu3/MqJ7Vlkle7Pylx8OvonhaYWmqlqynI4OLE
+    /jgsxegOdp5uhzLx3yECrWPjiHfEgv3P2Jkws+qnMwmDnYqY6HSLxuKyxEqlV6ap
+    0tczx8RRV9aoDoBCfQ7HMYCHNalqm5ChYbuUlEBfbPE/XCo6h9rmv//Ds6r25vuK
+    CzAwqv9zQyHZxDdXTW+ORbDcSkacf7WWqx/2MBn+cllczGa8eUy4p3G/RFkP4hzB
+    CnElm2QE3LfZp10pkqlr8URJ93U36R04WgCe9KNBLBX0lKPVpPLGEu2hBIbPttXM
+    JJvnzPMiu4Cbp1emhJ7J3zQOa3EKzbRxgKiMGkpj0rBP4nimifmtfjYTmKQcE5aH
+    sy6dy3aeshuBP7Lkx1GgaxiLaDKvv2GNS82VX+Qps2mTzTjEXvly2pAuZaz8SQ1a
+    FOsYhqjvQ5P9h6SGZh6yT+nyrDUx7fQbukZHw30hiMrWhN4EI8/3i0qqpzRYG7lI
+    ozhfq8q85KSlCHyUuQDZ+hieJxt1paHje9FzAnK8LjNDa099Y3uYtt60XduD4XbZ
+    GKmC5oZO9SthK5gzteu3f/vkCg91W0Dff2lIo19muhLBnUbAVWNyCRamublPtaLe
+    H7juEP/tuI89nFqVFn3Ow9WrLMy9
+    -----END CERTIFICATE-----
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+secretMounts:
+  - name: chirpstack-certs
+    secretName: chirpstack-certs
+    path: /etc/ssl/vernemq

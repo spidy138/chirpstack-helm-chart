@@ -1,0 +1,33 @@
+{{- if .Values.gatewaybridgebasicstation.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "gatewaybridgebasicstation.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "chirpstack.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "gatewaybridgebasicstation.fullname" . }}
+  minReplicas: {{ .Values.gatewaybridgebasicstation.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.gatewaybridgebasicstation.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.gatewaybridgebasicstation.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.gatewaybridgebasicstation.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.gatewaybridgebasicstation.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.gatewaybridgebasicstation.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}
