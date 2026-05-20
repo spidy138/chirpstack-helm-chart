@@ -1,0 +1,382 @@
+# Default values for vernemq.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: vernemq/vernemq
+  tag: 2.1.1-alpine
+
+  pullPolicy: IfNotPresent
+
+nameOverride: "vernemq"
+fullnameOverride: "vernemq"
+
+namespace: "vernemq"
+namespaceOverride: ""
+createNamespace: true
+
+serviceMonitor:
+  create: false
+  interval: 30s
+  labels: {}
+
+service:
+  # Can be disabled if more advanced use cases require more complex setups, e.g., combining LoadBalancer and ClusterIP for internal and external access. See also issue #274.
+  enabled: true
+  # NodePort - Listen to a port on nodes and forward to the service.
+  # ClusterIP - Listen on the service internal to the cluster only.
+  # LoadBalancer - Create a LoadBalancer in the cloud provider and forward to the service.
+  type: ClusterIP
+  #  clusterIP: 10.1.2.4
+  #  externalIPs: []
+  #  loadBalancerIP: 10.1.2.4
+  #  loadBalancerSourceRanges: []
+  #  externalTrafficPolicy: Local
+  #  sessionAffinity: None
+  #  sessionAffinityConfig: {}
+  mqtt:
+    enabled: false
+    port: 1883
+    # This is the port used by nodes to expose the service
+    nodePort: 1883
+  mqtts:
+    enabled: true
+    port: 8883
+    # This is the port used by nodes to expose the service
+    nodePort: 8883
+  ws:
+    enabled: false
+    port: 8080
+    # This is the port used by nodes to expose the service
+    nodePort: 8080
+  wss:
+    enabled: false
+    port: 8443
+    # This is the port used by nodes to expose the service
+    nodePort: 8443
+  api:
+    enabled: false
+    type: ClusterIP
+    port: 8888
+    nodePort: 38888
+    annotations: {}
+  annotations: {}
+  labels: {}
+
+headlessService:
+  customPorts: []
+  # Example of how to specify custom ports:
+  # - name: custom-port1
+  #   port: 1234
+  #   targetPort: 1234
+
+  ## Ingress can optionally be applied when enabling the MQTT websocket service
+  ## This allows for an ingress controller to route web ports and arbitrary hostnames
+  ## and paths to the websocket service as well as allow the controller to handle TLS
+  ## termination for the websocket traffic. Ingress is only possible for traffic exchanged
+  ## over HTTP, so ONLY the websocket service take advantage of ingress.
+ingress:
+  className: ""
+  enabled: false
+
+  labels: {}
+
+  annotations: {}
+
+  ## Hosts must be provided if ingress is enabled.
+  ##
+  hosts: [] # - vernemq.domain.com
+
+  ## Paths to use for ingress rules.
+  ##
+  paths:
+    - path: /
+      pathType: ImplementationSpecific
+
+  ## TLS configuration for ingress
+  ## Secret must be manually created in the namespace
+  ##
+  tls: []
+  # - secretName: vernemq-tls
+  #   hosts:
+  #   - vernemq.domain.com
+
+  ## VerneMQ resources requests and limits
+  ## Ref: http://kubernetes.io/docs/user-guide/compute-resources
+resources:
+  requests:
+    cpu: "1000m"
+    memory: "2Gi"
+  limits:
+    cpu: "2000m"
+    memory: "4Gi"
+## We usually recommend not to specify default resources and to leave this as a conscious
+## choice for the user. This also increases chances charts run on environments with little
+## resources, such as Minikube. If you do want to specify resources, uncomment the following
+## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+#  limits:
+#    cpu: 1
+#    memory: 256Mi
+#  requests:
+#    cpu: 1
+#    memory: 256Mi
+
+## Node labels for pod assignment
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+nodeSelector: {}
+
+## Node tolerations for pod assignment
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#taints-and-tolerations-beta-feature
+tolerations: []
+
+## Pod affinity
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+podAntiAffinity: soft
+
+# Security context (for the pods)
+securityContext:
+  runAsUser: 10000
+  runAsGroup: 10000
+  fsGroup: 10000
+  # Security context (for the containers, uncomment if needed; default is no specific container-level security context)
+  # containerSecurityContext:
+  # privileged: ...
+  # ...
+
+  ## If RBAC is enabled on the cluster,VerneMQ needs a service account
+  ## with permissisions sufficient to list pods
+rbac:
+  create: true
+  serviceAccount:
+    create: true
+    ## Service account name to be used.
+    ## If not set and serviceAccount.create is true a name is generated using the fullname template.
+    #    name:
+
+persistentVolume:
+  ## If true, VerneMQ will create/use a Persistent Volume Claim
+  ## If false, use local directory
+  enabled: true
+
+  ## VerneMQ data Persistent Volume access modes
+  ## Must match those of existing PV or dynamic provisioner
+  ## Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
+  accessModes:
+    - ReadWriteOnce
+
+  ## VerneMQ data Persistent Volume size
+  size: 5Gi
+
+  ## VerneMQ data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  #  storageClass: ""
+
+  ## Annotations for Persistent Volume Claim
+  annotations: {}
+
+extraVolumeMounts: []
+## Additional volumeMounts to the pod.
+#  - name: additional-volume-mount
+#    mountPath: /var/additional-volume-path
+
+extraVolumes: []
+## Additional volumes to the pod.
+#  - name: additional-volume
+#    emptyDir: {}
+
+# A list of secrets and their paths to mount inside the pod
+# This is useful for mounting certificates for security (tls)
+# secretMounts:
+#   - name: vernemq
+#     secretName: vernemq-certs
+#     path: /etc/ssl/vernemq
+
+statefulset:
+  ## Start and stop pods in Parallel or OrderedReady (one-by-one.)  Note - Can not change after first release.
+  ## Ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#pod-management-policy
+  podManagementPolicy: OrderedReady
+  ## Statefulsets rolling update update strategy
+  ## Ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#rolling-update
+  updateStrategy: RollingUpdate
+  ## If the strategy is set to RollingUpdate, parameterize the way pods are restarted
+  ## Ref: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#rollingupdatestatefulsetstrategy-v1-apps
+  rollingUpdate: {}
+  ## Configure how much time VerneMQ takes to move offline queues to other nodes
+  ## Ref: https://vernemq.com/docs/clustering/#detailed-cluster-leave-case-a-make-a-live-node-leave
+  terminationGracePeriodSeconds: 60
+  ## Liveness and Readiness probe values
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  livenessProbe:
+    initialDelaySeconds: 90
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /health/ping
+      port: api
+      scheme: HTTP
+    initialDelaySeconds: 90
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
+  podAnnotations: {}
+  #    prometheus.io/scrape: "true"
+  #    prometheus.io/port: "8888"
+  annotations: {}
+  labels: {}
+  podLabels: {}
+  lifecycle: {}
+  imagePullSecrets:
+    #    - "my-image-pull-secret"
+
+pdb:
+  enabled: true
+  minAvailable: 1
+  # maxUnavailable: 1
+
+certificates:
+  ca: |
+    -----BEGIN CERTIFICATE-----
+    MIIFrTCCA5WgAwIBAgIURg6LngaUHvsgH5Nr6FDQNctVOMQwDQYJKoZIhvcNAQEL
+    BQAwZjELMAkGA1UEBhMCU0cxEjAQBgNVBAgMCVNpbmdhcG9yZTESMBAGA1UEBwwJ
+    U2luZ2Fwb3JlMQ4wDAYDVQQKDAVNeU9yZzEMMAoGA1UECwwDUEtJMREwDwYDVQQD
+    DAhNeVJvb3RDQTAeFw0yNjA0MjkwNjQ1NTdaFw0zNjA0MjYwNjQ1NTdaMGYxCzAJ
+    BgNVBAYTAlNHMRIwEAYDVQQIDAlTaW5nYXBvcmUxEjAQBgNVBAcMCVNpbmdhcG9y
+    ZTEOMAwGA1UECgwFTXlPcmcxDDAKBgNVBAsMA1BLSTERMA8GA1UEAwwITXlSb290
+    Q0EwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQCMnnYC9VO8GtSnEl5N
+    R5gu/iBz2Je1R1SJns21U8gJGWZnzgWBP6N6CPV7Bsq3uTaIp9pUZB1vxkh32v7+
+    TMfjZPjMZ0ZNpnNVxRTuHc1ZeyGQdK8F84AcWGpWQfhIeQ+6kmn1Az37HY/LJqgr
+    FmcCGgwc3YkkWkcQg+lMPpq7Q8RGOo/A1qOtesi/Y8GYYjfvcM+0qCUODBgs9M38
+    KIm96tnfdb/2iwe7eGLDmW6q4CZISDh6gu2b98PUjTADWZKZxmiDeaFZGdMxW9+p
+    GVMNCnNS5GyfN9MJx6Ybf7zIK+5WaeHusyFE8JyCgHgauBUyv9Y6+nXUPlZ357po
+    DAu3Udc2Qe2lsGCnUFjTZMkHYhvC5JQ2Lkmliz2gh00yBUor/R+rWyX9pGklWr9j
+    2ccgGKPxcPvkz6HgO/9bbJGj/iPLQZlloMmewAIzDMCAnturLY2kbA3e2/5bogn5
+    x5gNhq7kMuhGhS+2Dv7jCHrYcF1T8xMASOOtW3g/g/7iFaI9rac5bn5u08otwyYi
+    CDk0C9b47GqY8i+AN4EbYnUlXF1zukALl+hEjZ0BY1C8y92Yf/WEwRNrJfI8I8+3
+    8ceOviWzRz7oy8vdfbUFWVLy76MFu1ibCc6LUDX1vexB2PGJd0DmadakVKks0WHF
+    8iGq7C1y8YIlaN4UMqeUStoTWwIDAQABo1MwUTAdBgNVHQ4EFgQUiyWjePh3zrD6
+    Q7MW3pbeUu6fjqIwHwYDVR0jBBgwFoAUiyWjePh3zrD6Q7MW3pbeUu6fjqIwDwYD
+    VR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAgEAcvPXZNZ+CZcXjAMm4GvV
+    TIU05LYA0Jg4vYYcnU5/jLd4a8bXIhmsd+fU2y3+hBj6AN6p5gM7xyq9DQPJpX7P
+    e/+bthiW8kYUW7O74fJM9rC/Bg+Ks+NdltLey9HujmYrRyXGsgKx91udzBSGJZzx
+    1oTUxlDXUio0fMcHK42zKSrqMlU8C8tNUWuO3ke9hCLLIl2pLWB5MDTea6sj0fCb
+    Q35rKzYCHpM+4hNsouwLaCd4Z0Yx6N4CgPk8bi59TNDZfpEu9DijJeCpid05qsGI
+    QIi2v27YuH20/HuTc75qBywimqO3Rol69/+MGXHdkEzwKKQPHdJHAzIsWGsnLVWB
+    9HgFEUmMnIPbCFpjH3GYrfY6VUVX7AErSUpBZ17eyTHFkROUsyg8Ci4bA10yE491
+    pEm4J38illRK8WFUxiwIuoSJjoL18R2hZS+gQsl1vAeqglrhzJ8gC7jFK08mkiyX
+    Q1jLCJuxYIvU8Ga/JoRUjqqHNoCG3983WElKIWTqAVHswLTxCGFg9JXzIwN5fVs6
+    N2QK1QU3UFLj5PymlpeLvvnnzqNnBSBESojW6PoJ/O+3JHS4BP0MKPKoJJH85t9I
+    x41RpJghY8WcftEG0/qUDHvUcBsQLBfR6NjroLBZY+5NJyGJvxB5ZWBgBVI4mUif
+    RAA0zBxT60qclkCqSIfFW6o=
+    -----END CERTIFICATE-----
+
+  key: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDwAvGibgUN6qaR
+    qLTZ8YFmGTUO+iIZuscyuy1ROJLqOrHUl1qZpUGK+RfS7KWDPLMZ2CVNpfMhsCTI
+    cRkWlaX40SAhJ44fGtYJ+gWSh+2t+WooA6c29YqbWh1Es/BySCaNBJOUeHaUryLg
+    a8LlN8LTiOayW4fjGmrhK1tVEDIG3wtdt7J68iBUo/LUeKAyerl3FAtzEzVXX96e
+    oHsGOkqB/MIkmNBqCA7UXD7yy9ZD2GlZXSVAIMdTCQVQd7FyJmvZ861iFrvB0vFH
+    g+6sn3Wqx6dJzWLWTNNO+d5S+5EIY+CMgy4tQ7JFtPQWObvrYdhMbyrL0iwwIob+
+    yBz+DHKtAgMBAAECggEAAM8XEIPBFQ0l3Fp8xR2BC3sM756nUW/FgIzwENSupocC
+    VuA0m78TSewt5UQZlygXcKrcDjdjMfQYQPoHuIGLSMaEjonUCT7NdzayvTiVZdS3
+    J1NfYcwKEVXBTw34pmLYwfjrT08FE73hmKgLb60CqN9rB6NPVtQr9yj86rTsmcv8
+    /BHzHQ5FrrUsphEp09+lb04SclNnW9lo9tF6ZEXa+wDsUknfgS70rm/SmWX+ZDhx
+    e51G7cu582YU6nMqTNuMiWtj+R00Ab9qDugiZ/TTjFLjtKm3vSHo8/3FmhVD7nAU
+    l1oT4yaJp/MnoiSaITDUHnDiDvoam/pImIJMaPjIgQKBgQD/yskJyM7sVqoQu0A9
+    uH80B0wNHlj5JhBPBUpzdiYfn0+5t5Bc4BgymTF862Cu9P0gsv0RF2PLeOBvTCZ2
+    k3xHjLm+YvVlGW4I6gSv1VRj0skRhjmkeklxx9bhWKxqoFWqY+nCXw9c9Gjg6MDw
+    t1iT0R6yY6HWiYfuiRXli7yZyQKBgQDwNOAnA/nptqxV18OUyKDk6eoFFMWs1T+u
+    PWUcMo+f2Hxd0HpEupgxqt9iWi0SMtjLaoRHMonEuKPX2PSsraXzRp1HAeNCPWlA
+    2KNTVuUkFY5C1ofyK76EaTGf6hvhunTPSIhGU2C598MHXymrQA953hSn9SKmKvpA
+    v5sAqZbDxQKBgGphc+rV0PkJsgDzX2xL5ttEjaSHEonMAsxabvRGFuTf5NBgP3Hg
+    4S9p9uL1IWiiCwQmbIlHKQHea7jd+sEl5XH8XOOJVHWPdevPJ9PY7Rf2+hiHskFt
+    ek4PxpZBwrM1q2sJ0pY74q/OFjAznMp/9h7Dwfh+5zfKSvYxnSGyU+XBAoGBAIPw
+    p0cG+hkUC+lDEN0Crs3OZorP9ByRLd9pPcaVRyrH4NgvEVn7HGn7r6P4YFVktIxX
+    P71T1zTFLsn7E7pdz4+nM/Cy6r+Rt+S0mlHGoyqE5JV1/UpaGNXmaimqkBIXNt48
+    uw3V8oVzwB6meN7l2xpXkAUJszSO2tMB7AQbIwL5AoGADLueLclXOnSYpPciTnWt
+    ggV+zolDwoEm+DHmR3QDW3N/2b9E2ejDhwbboIotiy+qQMKpY1A+GHibmMbYyvyk
+    Jry0rA1rurXtM+Bh21cvID4ftucIQpEnSpNhmETMMWKVsOD7FtQ53zEwJgondILU
+    ClPLje/+450ORXxLxiswy60=
+    -----END PRIVATE KEY-----
+
+  cert: |
+    -----BEGIN CERTIFICATE-----
+    MIIFNjCCAx6gAwIBAgIUU1sJ0Mc6G279W0sqKC24NaHXvQkwDQYJKoZIhvcNAQEL
+    BQAwZjELMAkGA1UEBhMCU0cxEjAQBgNVBAgMCVNpbmdhcG9yZTESMBAGA1UEBwwJ
+    U2luZ2Fwb3JlMQ4wDAYDVQQKDAVNeU9yZzEMMAoGA1UECwwDUEtJMREwDwYDVQQD
+    DAhNeVJvb3RDQTAeFw0yNjA0MjkwODEyMTlaFw0yODA4MDEwODEyMTlaMGoxCzAJ
+    BgNVBAYTAlNHMRIwEAYDVQQIDAlTaW5nYXBvcmUxEjAQBgNVBAcMCVNpbmdhcG9y
+    ZTEOMAwGA1UECgwFTXlPcmcxCzAJBgNVBAsMAklUMRYwFAYDVQQDDA12ZXJuZW1x
+    LmxvY2FsMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8ALxom4FDeqm
+    kai02fGBZhk1DvoiGbrHMrstUTiS6jqx1JdamaVBivkX0uylgzyzGdglTaXzIbAk
+    yHEZFpWl+NEgISeOHxrWCfoFkoftrflqKAOnNvWKm1odRLPwckgmjQSTlHh2lK8i
+    4GvC5TfC04jmsluH4xpq4StbVRAyBt8LXbeyevIgVKPy1HigMnq5dxQLcxM1V1/e
+    nqB7BjpKgfzCJJjQaggO1Fw+8svWQ9hpWV0lQCDHUwkFUHexciZr2fOtYha7wdLx
+    R4PurJ91qsenSc1i1kzTTvneUvuRCGPgjIMuLUOyRbT0Fjm762HYTG8qy9IsMCKG
+    /sgc/gxyrQIDAQABo4HXMIHUMG0GA1UdEQRmMGSCD3Zlcm5lbXEudmVybmVtcYIN
+    dmVybmVtcS5sb2NhbIITdmVybmVtcS52ZXJuZW1xLnN2Y4IhdmVybmVtcS52ZXJu
+    ZW1xLnN2Yy5jbHVzdGVyLmxvY2FshwR/AAABhwQ5l08SMA4GA1UdDwEB/wQEAwIF
+    oDATBgNVHSUEDDAKBggrBgEFBQcDATAdBgNVHQ4EFgQU82asmwrR1h+xIchCT7zC
+    hXSwPe0wHwYDVR0jBBgwFoAUiyWjePh3zrD6Q7MW3pbeUu6fjqIwDQYJKoZIhvcN
+    AQELBQADggIBAHfVwhdHoR6mKDRDIXGCHr0TSb4HUnHJVKiu8Zku2aARBatgGKxO
+    zuEsf1U5aiBk4fmZ5Hlw7o2TfAmF33VHPVjrFWggaZu4HzhJmi+eBfl2S5SkqF2Q
+    kLbY0RElQ2h7OuyYKwxXYqpmf0HH4V+tv7FQCw6+1VUQFpgPfU/sEmpfEFGTrUwS
+    kKK+wqWzuhoO/yOJPCUoPSC1lRpx35jt9tI/ADrkcA8r4iFnevHB1nJRIiZ/JRrJ
+    9L2Vk9xla6CrEamC7QK5rNxVUDP5gTvvbcyet9wvtPoKfNalRaJk3Xw24I6MyCRF
+    a5vPkrXFqun/+O+ZZJLgslPr1jMhEt/8iZwF8cN2dSAmQZuEWrb5jFOSIdsRh8CK
+    Tg7WoU56AnCZBhN4u3tfHApe7t6M60NzoUMkNSu2Dpx+S6gC/6GFnj8hsG1cjEIm
+    iwf0GwnjtojAVw40CUXs5yUeJ6OGXoD5nfV7bDr+eI3T+YVbYqj5wm1IKs6EQEKh
+    aLTWoxRpYV0POjEqCrAh037e7xihksL50AIsTB2UgID/8Bdift5T6sgZKOIh1qL+
+    OaC0hU9KaxBf1/GoOE3F7qdrOVM7nqKOllFRIFQv8yPng9ukRVT2s+oBMu8fdWzn
+    TeJYwtwF32sE5kNwmVWjftxakSxz6nJmM4SSLZazTV2a3SZPNQzVljsG
+    -----END CERTIFICATE-----
+
+additionalEnv:
+  - name: DOCKER_VERNEMQ_ALLOW_REGISTER_DURING_NETSPLIT
+    value: "on"
+  - name: DOCKER_VERNEMQ_ALLOW_PUBLISH_DURING_NETSPLIT
+    value: "on"
+  - name: DOCKER_VERNEMQ_ALLOW_SUBSCRIBE_DURING_NETSPLIT
+    value: "on"
+  - name: DOCKER_VERNEMQ_ALLOW_UNSUBSCRIBE_DURING_NETSPLIT
+    value: "on"
+  - name: DOCKER_VERNEMQ_ACCEPT_EULA
+    value: "yes"
+  - name: DOCKER_VERNEMQ_ALLOW_ANONYMOUS
+    value: "on"
+  #  - name: DOCKER_VERNEMQ_MAX_CLIENT_ID_SIZE
+  #    value: "100"
+  #  - name: DOCKER_VERNEMQ_MAX_ONLINE_MESSAGES
+  #    value: "10000"
+  #  - name: DOCKER_VERNEMQ_MAX_OFFLINE_MESSAGES
+  #    value: "-1"
+  #  Please note that the following environment variables will conflict
+  #  with configuration under the `certificates` config key
+  # - name: DOCKER_VERNEMQ_LISTENER__SSL__CAFILE
+  #   value: "/etc/ssl/vernemq/tls.crt"
+  # - name: DOCKER_VERNEMQ_LISTENER__SSL__CERTFILE
+  #   value: "/etc/ssl/vernemq/tls.crt"
+  # - name: DOCKER_VERNEMQ_LISTENER__SSL__KEYFILE
+  #   value: "/etc/ssl/vernemq/tls.key"
+envFrom: []
+# add additional environment variables e.g. from a configmap or secret
+# can be usefull if you wanna use authentication via files
+#  - secretRef:
+#      name: vernemq-users
+
+acl:
+  enabled: false
+  labels: {}
+  annotations: {}
+  content: |-
+    topic #
