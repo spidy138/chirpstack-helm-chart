@@ -75,7 +75,7 @@ gatewaybridge:
     maxReplicas: 3
     targetCPUUtilizationPercentage: 80
   service:
-    type: LoadBalancer
+    type: ClusterIP
     port: 1700
     targetPort: 1700
     containerPort: 1700
@@ -146,7 +146,7 @@ chirpstack:
     maxReplicas: 3
     targetCPUUtilizationPercentage: 80
   service:
-    type: LoadBalancer
+    type: ClusterIP
     port: 8080
     targetPort: 8080
     containerPort: 8080
