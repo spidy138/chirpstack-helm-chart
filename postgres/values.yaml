@@ -1,0 +1,124 @@
+replicaCount: 1
+nameOverride: ""
+fullnameOverride: "postgres"
+namespace: "chirpstack"
+createNamespace: false
+
+image:
+  repository: postgres
+  pullPolicy: IfNotPresent
+  tag: "14-alpine"
+
+imagePullSecrets: []
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9187"
+
+podSecurityContext:
+  runAsNonRoot: false
+  runAsUser: 999
+  fsGroup: 999
+  fsGroupChangePolicy: "OnRootMismatch"
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+service:
+  type: ClusterIP
+  port: 5432
+  targetPort: 5432
+  annotations: {}
+
+persistence:
+  enabled: true
+  storageClassName: "local-path"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  mountPath: /var/lib/postgresql/data
+  subPath: "postgres"
+
+postgresql:
+  host: "postgres.chirpstack"
+  port: 5432
+  username: chirpstack
+  password: "chirpstack"
+  database: chirpstack
+  rootPassword: "chirpstack"
+
+  # PostgreSQL configuration
+  config:
+    max_connections: 100
+    shared_buffers: 256MB
+    effective_cache_size: 1GB
+    maintenance_work_mem: 64MB
+    checkpoint_completion_target: 0.9
+    wal_buffers: 16MB
+    default_statistics_target: 100
+    random_page_cost: 1.1
+    effective_io_concurrency: 200
+    work_mem: 4MB
+    min_wal_size: 2GB
+    max_wal_size: 8GB
+
+livenessProbe:
+  enabled: true
+  exec:
+    command:
+      - /bin/sh
+      - -c
+      - pg_isready -U chirpstack
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  exec:
+    command:
+      - /bin/sh
+      - -c
+      - pg_isready -U chirpstack
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 1
+  failureThreshold: 3
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+initdb:
+  enabled: true
+  scripts:
+    001-init.sql: |
+      CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+      CREATE EXTENSION IF NOT EXISTS "hstore";
+    002-pgx-plugin.sql: |
+      -- Enable pgx plugin support for ChirpStack
+      CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+      -- Additional extensions for performance and features
+      CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+      CREATE EXTENSION IF NOT EXISTS "btree_gin";

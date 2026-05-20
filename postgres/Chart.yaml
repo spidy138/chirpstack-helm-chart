@@ -1,0 +1,13 @@
+apiVersion: v2
+name: postgres
+description: PostgreSQL Helm chart for Chirpstack LORAWAN deployment
+type: application
+version: 1.0.0
+appVersion: "14-alpine"
+keywords:
+  - postgres
+  - postgresql
+  - database
+  - chirpstack
+maintainers:
+  - name: LORAWAN Team
