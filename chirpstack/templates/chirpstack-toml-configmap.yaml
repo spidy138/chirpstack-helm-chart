@@ -1,0 +1,24 @@
+{{- if .Values.chirpstack.enabled.configMap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chirpstack.fullname" . }}-toml-config
+  namespace: {{ .Values.namespace }}
+data:
+{{- $pghost := .Values.chirpstack.configMapData.POSTGRESQL_HOST }}
+{{- $redishost := .Values.chirpstack.configMapData.REDIS_HOST }}
+{{- $broker := .Values.chirpstack.configMapData.MQTT_BROKER_HOST }}
+{{- $port := .Values.chirpstack.configMapData.MQTT_BROKER_PORT | toString }}
+{{- $apisecret := .Values.chirpstack.configMapData.API_SECRET }}
+{{- $cacert := .Values.chirpstack.configMapData.CA_CERT_PATH }}
+{{- $tlscert := .Values.chirpstack.configMapData.TLS_CERT_PATH }}
+{{- $tlskey := .Values.chirpstack.configMapData.TLS_KEY_PATH }}
+{{- range $path, $_ := $.Files.Glob "configuration/chirpstack/chirpstack.toml" }}
+  {{ base $path }}: |
+{{ $.Files.Get $path | replace "$POSTGRESQL_HOST" $pghost | replace "$REDIS_HOST" $redishost | replace "$MQTT_BROKER_HOST" $broker | replace "$MQTT_BROKER_PORT" $port | replace "$API_SECRET" $apisecret | replace "$CA_CERT_PATH" $cacert | replace "$TLS_CERT_PATH" $tlscert | replace "$TLS_KEY_PATH" $tlskey | indent 4 }}
+{{- end }}
+{{- range $path, $_ := $.Files.Glob "configuration/chirpstack/region_*.toml" }}
+  {{ base $path }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
+{{- end }}

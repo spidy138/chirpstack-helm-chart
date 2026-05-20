@@ -1,0 +1,33 @@
+{{- if .Values.restapi.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "restapi.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "chirpstack.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "restapi.fullname" . }}
+  minReplicas: {{ .Values.restapi.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.restapi.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.restapi.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.restapi.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.restapi.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.restapi.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

@@ -1,0 +1,33 @@
+{{- if .Values.chirpstack.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "chirpstack.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "chirpstack.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "chirpstack.fullname" . }}
+  minReplicas: {{ .Values.chirpstack.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.chirpstack.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.chirpstack.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.chirpstack.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.chirpstack.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.chirpstack.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

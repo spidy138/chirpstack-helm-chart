@@ -1,0 +1,17 @@
+{{- if .Values.gatewaybridge.enabled.configMap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chirpstack.fullname" . }}-gateway-bridge-toml-config
+  namespace: {{ .Values.namespace }}
+data:
+{{- $broker := .Values.gatewaybridge.configMapData.MQTT_BROKER_HOST }}
+{{- $port := .Values.gatewaybridge.configMapData.MQTT_BROKER_PORT | toString }}
+{{- $cacert := .Values.gatewaybridge.configMapData.CA_CERT_PATH }}
+{{- $tlscert := .Values.gatewaybridge.configMapData.TLS_CERT_PATH }}
+{{- $tlskey := .Values.gatewaybridge.configMapData.TLS_KEY_PATH }}
+{{- range $path, $_ := $.Files.Glob "configuration/chirpstack-gateway-bridge/chirpstack-gateway-bridge.toml" }}
+  {{ base $path }}: |
+{{ $.Files.Get $path | replace "$MQTT_BROKER_HOST" $broker | replace "$MQTT_BROKER_PORT" $port | replace "$CA_CERT_PATH" $cacert | replace "$TLS_CERT_PATH" $tlscert | replace "$TLS_KEY_PATH" $tlskey | indent 4 }}
+{{- end }}
+{{- end }}

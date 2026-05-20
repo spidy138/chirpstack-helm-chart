@@ -1,0 +1,10 @@
+# See https://www.chirpstack.io/gateway-bridge/install/config/ for a full
+# configuration example and documentation.
+
+[integration.mqtt.auth.generic]
+servers=["ssl://$MQTT_BROKER_HOST:$MQTT_BROKER_PORT"]
+username=""
+password=""
+ca_cert="$CA_CERT_PATH"
+tls_key="$TLS_KEY_PATH"
+tls_cert="$TLS_CERT_PATH"

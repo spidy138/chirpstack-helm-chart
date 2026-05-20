@@ -1,282 +1,681 @@
-# Career-Ops
+# ChirpStack LoRaWAN Helm Charts
 
-[English](README.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [Русский](README.ru.md) | [简体中文](README.cn.md) | [繁體中文](README.zh-TW.md)
+A comprehensive Kubernetes deployment for **ChirpStack**, a full-stack LoRaWAN network server, along with supporting infrastructure services (PostgreSQL, Redis, and VerneMQ).
 
-<p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Career-Ops — Multi-Agent Job Search System" width="800"></a>
-</p>
+## Overview
 
-<p align="center">
-  <em>I spent months applying to jobs the hard way. So I engineered the system I wish I had.</em><br>
-  Companies use AI to filter candidates. <strong>I just gave candidates AI to <em>choose</em> companies.</strong><br>
-  <em>Now it's open source.</em>
-</p>
+This repository contains production-ready Helm charts for deploying ChirpStack v4.10.0 on Kubernetes with:
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white" alt="Claude Code">
-  <img src="https://img.shields.io/badge/OpenCode-111827?style=flat&logo=terminal&logoColor=white" alt="OpenCode">
-  <img src="https://img.shields.io/badge/Codex_(soon)-6B7280?style=flat&logo=openai&logoColor=white" alt="Codex">
-  <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white" alt="Node.js">
-  <img src="https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white" alt="Go">
-  <img src="https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white" alt="Playwright">
-  <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT">
-  <a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/Discord-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord"></a>
-  <br>
-  <img src="https://img.shields.io/badge/EN-blue?style=flat" alt="EN">
-  <img src="https://img.shields.io/badge/ES-red?style=flat" alt="ES">
-  <img src="https://img.shields.io/badge/DE-grey?style=flat" alt="DE">
-  <img src="https://img.shields.io/badge/FR-blue?style=flat" alt="FR">
-  <img src="https://img.shields.io/badge/PT--BR-green?style=flat" alt="PT-BR">
-  <img src="https://img.shields.io/badge/KO-white?style=flat" alt="KO">
-  <img src="https://img.shields.io/badge/JA-red?style=flat" alt="JA">
-  <img src="https://img.shields.io/badge/ZH--CN-red?style=flat" alt="ZH-CN">
-  <img src="https://img.shields.io/badge/ZH--TW-blue?style=flat" alt="ZH-TW">
-</p>
+- **ChirpStack Application Server** - Core LoRaWAN network server
+- **Gateway Bridge** - Connects LoRa gateways to ChirpStack
+- **Gateway Bridge Basic Station** - Support for basic station protocol
+- **REST API** - HTTP API for applications
+- **PostgreSQL** - Persistent data store
+- **Redis** - In-memory cache layer
+- **VerneMQ** - MQTT message broker
+
+All services are configured to work together seamlessly with TLS encryption, persistent storage, and horizontal pod autoscaling capabilities.
 
 ---
 
-<p align="center">
-  <img src="docs/demo.gif" alt="Career-Ops Demo" width="800">
-</p>
+## Table of Contents
 
-<p align="center"><strong>740+ job listings evaluated · 100+ personalized CVs · 1 dream role landed</strong></p>
+1. [ChirpStack](#chirpstack)
+2. [PostgreSQL](#postgresql)
+3. [Redis](#redis)
+4. [VerneMQ](#vernemq)
+5. [Installation](#installation)
+6. [Configuration](#configuration)
+7. [Services & Networking](#services--networking)
 
-<p align="center"><a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/Join_the_community-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a></p>
+---
 
-## What Is This
+## ChirpStack
 
-Career-Ops turns any AI coding CLI into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
+### Description
 
-- **Evaluates offers** with a structured A-F scoring system (10 weighted dimensions)
-- **Generates tailored PDFs** -- ATS-optimized CVs customized per job description
-- **Scans portals** automatically (Greenhouse, Ashby, Lever, company pages)
-- **Processes in batch** -- evaluate 10+ offers in parallel with sub-agents
-- **Tracks everything** in a single source of truth with integrity checks
+ChirpStack is an open-source LoRaWAN network server. It provides:
 
-> **Important: This is NOT a spray-and-pray tool.** Career-ops is a filter -- it helps you find the few offers worth your time out of hundreds. The system strongly recommends against applying to anything scoring below 4.0/5. Your time is valuable, and so is the recruiter's. Always review before submitting.
+- **Application Server**: Manages connected devices and applications
+- **Gateway Bridge**: Translates between LoRa gateways and the application server
+- **REST API**: Programmatic access to ChirpStack functionality
+- **Web Interface**: Management UI for devices, applications, and gateways
 
-Career-ops is agentic: Claude Code navigates career pages with Playwright, evaluates fit by reasoning about your CV vs the job description (not keyword matching), and adapts your resume per listing.
+### Version
 
-> **Heads up: the first evaluations won't be great.** The system doesn't know you yet. Feed it context -- your CV, your career story, your proof points, your preferences, what you're good at, what you want to avoid. The more you nurture it, the better it gets. Think of it as onboarding a new recruiter: the first week they need to learn about you, then they become invaluable.
+- **Application Version**: 4.10.0
+- **Chart Version**: 0.1.0
 
-Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored CVs, and land a Head of Applied AI role. [Read the full case study](https://santifer.io/career-ops-system).
+### Components
 
-## Features
+#### 1. **ChirpStack Application Server**
 
-| Feature | Description |
-|---------|-------------|
-| **Auto-Pipeline** | Paste a URL, get a full evaluation + PDF + tracker entry |
-| **6-Block Evaluation** | Role summary, CV match, level strategy, comp research, personalization, interview prep (STAR+R) |
-| **Interview Story Bank** | Accumulates STAR+Reflection stories across evaluations -- 5-10 master stories that answer any behavioral question |
-| **Negotiation Scripts** | Salary negotiation frameworks, geographic discount pushback, competing offer leverage |
-| **ATS PDF Generation** | Keyword-injected CVs with Space Grotesk + DM Sans design |
-| **Portal Scanner** | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
-| **Batch Processing** | Parallel evaluation with `claude -p` workers |
-| **Dashboard TUI** | Terminal UI to browse, filter, and sort your pipeline |
-| **Human-in-the-Loop** | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call |
-| **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
+The core component that handles LoRaWAN protocol and device management.
 
-## Quick Start
+**Key Configuration:**
+- **Image**: `chirpstack/chirpstack:4`
+- **Port**: 8080 (LoadBalancer)
+- **Replicas**: 1 (configurable)
+- **Storage Backend**: PostgreSQL + Redis
+
+**Environment Variables:**
+```yaml
+POSTGRESQL_HOST: postgres.chirpstack
+POSTGRESQL_PORT: 5432
+POSTGRESQL_USER: chirpstack
+POSTGRESQL_PASSWORD: chirpstack
+POSTGRESQL_DB: chirpstack
+REDIS_HOST: redis.chirpstack
+REDIS_PORT: 6379
+REDIS_PASSWORD: password
+MQTT_BROKER_HOST: vernemq.vernemq
+MQTT_BROKER_PORT: 8883
+```
+
+**Database Dependencies:**
+- PostgreSQL for application data, device information, and configuration
+- Redis for caching and session management
+
+#### 2. **Gateway Bridge**
+
+Connects standard LoRa gateways to ChirpStack using the Semtech UDP protocol.
+
+**Key Configuration:**
+- **Image**: `chirpstack/chirpstack-gateway-bridge:4`
+- **Port**: 1700 (UDP, LoadBalancer) - Standard LoRa gateway port
+- **Replicas**: 1 (configurable, supports autoscaling)
+
+**Event Topic Template:**
+```
+in865/gateway/{{ .GatewayID }}/event/{{ .EventType }}
+```
+
+**State Topic Template:**
+```
+in865/gateway/{{ .GatewayID }}/state/{{ .StateType }}
+```
+
+**MQTT Integration:**
+- Publishes gateway events to MQTT broker (VerneMQ)
+- Subscribes to command topics for downlink messages
+- Uses TLS encryption for secure communication
+
+#### 3. **Gateway Bridge Basic Station**
+
+Support for the newer ChirpStack Basic Station protocol for advanced gateways.
+
+**Key Configuration:**
+- **Image**: `chirpstack/chirpstack-gateway-bridge:4`
+- **Port**: 3001 (ClusterIP)
+- **Replicas**: 1 (configurable)
+- **Protocol**: Basic Station (proprietary Semtech protocol)
+
+**Use Case:** 
+Basic Station is a more modern protocol for gateways, offering better performance and reliability than the UDP protocol. Use this bridge for newer gateway hardware.
+
+#### 4. **REST API**
+
+HTTP/gRPC API for external applications to interact with ChirpStack.
+
+**Key Configuration:**
+- **Image**: `chirpstack/chirpstack-rest-api:4`
+- **Port**: 8090 (ClusterIP)
+- **Replicas**: 1 (configurable)
+- **Server**: Connects to ChirpStack application server on port 8080
+
+**Typical Use Cases:**
+- Device provisioning and management
+- Application configuration
+- Data retrieval and analytics
+- Integration with external systems
+
+### Autoscaling
+
+All components support Horizontal Pod Autoscaling (HPA):
+
+```yaml
+autoscaling:
+  enabled: false  # Set to true to enable
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+```
+
+Enable autoscaling in `values.yaml` to automatically scale based on CPU usage.
+
+### TLS/Certificate Management
+
+ChirpStack communicates with VerneMQ over TLS. Certificates are managed via:
+
+- **CA Certificate**: Root CA for broker verification
+- **Client Certificate**: Signed client certificate for ChirpStack
+- **Client Key**: Private key for TLS authentication
+
+Certificates are mounted from Kubernetes secrets at `/etc/ssl/vernemq/`.
+
+### Service Account
+
+The chart creates a service account with minimal permissions for running the containers.
+
+---
+
+## PostgreSQL
+
+### Description
+
+PostgreSQL database stores all persistent data for ChirpStack, including:
+
+- Device information and state
+- Application configuration
+- User accounts and permissions
+- LoRaWAN network keys and session data
+- Device activation records (ABP and OTAA)
+
+### Version
+
+- **Database Version**: 14 (Alpine)
+- **Chart Version**: 1.0.0
+
+### Configuration
+
+**Default Settings:**
+```yaml
+replicaCount: 1
+namespace: chirpstack
+image:
+  repository: postgres
+  tag: 14-alpine
+```
+
+**Service:**
+- **Type**: ClusterIP
+- **Port**: 5432
+- **Service Name**: `postgres.chirpstack`
+
+**Credentials (defaults - change in production):**
+```yaml
+POSTGRES_USER: chirpstack
+POSTGRES_PASSWORD: chirpstack
+POSTGRES_DB: chirpstack
+```
+
+**Persistence:**
+- **Storage Class**: `local-path`
+- **Size**: 10Gi (adjust for your needs)
+- **Mount Path**: `/var/lib/postgresql/data`
+- **Access Mode**: ReadWriteOnce
+
+### Database Initialization
+
+The chart includes init scripts that automatically:
+1. Create the ChirpStack database
+2. Set up required schema
+3. Configure necessary extensions
+4. Initialize application tables
+
+All init scripts are stored in `init-configmap.yaml`.
+
+### Monitoring
+
+- **Prometheus Integration**: Enabled via annotations
+  ```yaml
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9187"
+  ```
+- Use a PostgreSQL exporter for detailed metrics
+
+### Security
+
+**Pod Security Context:**
+```yaml
+runAsUser: 999  # Non-root postgres user
+fsGroup: 999
+```
+
+**Container Security:**
+- `allowPrivilegeEscalation: false`
+- All capabilities dropped
+- Read-only filesystem (except data directory)
+
+---
+
+## Redis
+
+### Description
+
+Redis provides high-performance caching and session storage for ChirpStack:
+
+- Session data caching
+- Device state caching
+- Real-time metrics and counters
+- Queue management for asynchronous tasks
+
+### Version
+
+- **Redis Version**: 7 (Alpine)
+- **Chart Version**: 1.0.0
+
+### Configuration
+
+**Default Settings:**
+```yaml
+replicaCount: 1
+namespace: chirpstack
+image:
+  repository: redis
+  tag: 7-alpine
+```
+
+**Service:**
+- **Type**: ClusterIP
+- **Port**: 6379
+- **Service Name**: `redis.chirpstack`
+
+**Authentication:**
+```yaml
+redis:
+  password: "password"  # Change in production
+```
+
+**Persistence:**
+- **Storage Class**: `local-path`
+- **Size**: 5Gi
+- **Mount Path**: `/data`
+- **Access Mode**: ReadWriteOnce
+
+### Performance Tuning
+
+Redis is configured for optimal performance with:
+- AOF (Append-Only File) persistence
+- Configurable memory limits
+- Support for clustering (via values)
+
+### Monitoring
+
+- **Prometheus Integration**: Enabled
+  ```yaml
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9121"
+  ```
+
+### Security
+
+**Pod Security Context:**
+```yaml
+runAsUser: 999      # Non-root redis user
+runAsNonRoot: true
+fsGroup: 999
+```
+
+**Container Security:**
+- `allowPrivilegeEscalation: false`
+- All capabilities dropped
+- Restricted filesystem access
+
+---
+
+## VerneMQ
+
+### Description
+
+VerneMQ is a high-performance, distributed MQTT message broker. It acts as the central message hub for:
+
+- Gateway-to-server communication
+- Device uplink messages
+- Server-to-gateway downlink commands
+- Event distribution to multiple subscribers
+
+### Version
+
+- **VerneMQ Version**: 2.1.1
+- **Chart Type**: Helm v2 compatible
+
+### Key Features
+
+- **High Performance**: Handles thousands of concurrent connections
+- **Distributed Architecture**: Supports clustering for scalability
+- **MQTT 3.1.1 & 5.0**: Full protocol compliance
+- **TLS/SSL**: Secure encrypted communication
+- **ACL Support**: Fine-grained access control
+
+### Ports
+
+- **8883**: MQTT over TLS (main protocol port)
+- **8888**: HTTP management API
+- **9100**: Cluster communication
+- **44053**: Cluster communication (alternate)
+
+### TLS Configuration
+
+VerneMQ is configured to require TLS for all MQTT connections:
+
+**Certificates:**
+- CA certificate for client validation
+- Server certificate and private key
+- Client certificates for ChirpStack and Gateway Bridges
+
+**Mount Points:**
+- `/etc/ssl/vernemq/ca.crt` - Root CA
+- `/etc/ssl/vernemq/cert.crt` - Server certificate  
+- `/etc/ssl/vernemq/key.key` - Private key
+
+### ACL (Access Control List)
+
+VerneMQ includes an ACL configuration that controls:
+- Which clients can connect
+- Topic permissions (publish/subscribe)
+- Message size limits
+
+See `templates/configmap-acl.yaml` for detailed rules.
+
+### Clustering
+
+For high availability, VerneMQ supports clustering:
+- StatefulSet deployment ensures stable node names
+- Headless service for peer discovery
+- Pod disruption budget for safe rolling updates
+
+Enable clustering in values:
+```yaml
+clustering:
+  enabled: true
+  nodes: 3
+```
+
+### Pod Disruption Budget
+
+Protects against involuntary disruptions:
+```yaml
+minAvailable: 1  # At least one broker always running
+```
+
+### Monitoring
+
+Kubernetes integration:
+- **ServiceMonitor** for Prometheus scraping
+- Health check endpoints for readiness/liveness probes
+- Detailed metrics on connections, messages, and performance
+
+---
+
+## Installation
+
+### Prerequisites
+
+- Kubernetes 1.19+
+- Helm 3.0+
+- Persistent storage backend (local-path, NFS, etc.)
+- TLS certificates (for VerneMQ)
+
+### Quick Start
 
 ```bash
-# 1. Clone and install
-git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
-npx playwright install chromium   # Required for PDF generation
+# 1. Add the chart repository (if using a registry)
+helm repo add chirpstack https://your-registry.com/charts
+helm repo update
 
-# 2. Check setup
-npm run doctor                     # Validates all prerequisites
+# 2. Create namespace
+kubectl create namespace chirpstack
 
-# 3. Configure
-cp config/profile.example.yml config/profile.yml  # Edit with your details
-cp templates/portals.example.yml portals.yml       # Customize companies
+# 3. Install all charts in dependency order
 
-# 4. Add your CV
-# Create cv.md in the project root with your CV in markdown
+# Install PostgreSQL first
+helm install postgres ./postgres \
+  --namespace chirpstack
 
-# 5. Personalize with Claude
-claude   # Open Claude Code in this directory
+# Wait for PostgreSQL to be ready
+kubectl wait --for=condition=ready pod \
+  -l app=postgres -n chirpstack --timeout=300s
 
-# Then ask Claude to adapt the system to you:
-# "Change the archetypes to backend engineering roles"
-# "Translate the modes to English"
-# "Add these 5 companies to portals.yml"
-# "Update my profile with this CV I'm pasting"
+# Install Redis
+helm install redis ./redis \
+  --namespace chirpstack
 
-# 6. Start using
-# Paste a job URL or run /career-ops
+# Install VerneMQ
+helm install vernemq ./vernemq \
+  --namespace vernemq
+
+# Finally, install ChirpStack (depends on all others)
+helm install chirpstack ./chirpstack \
+  --namespace chirpstack
 ```
 
-> **The system is designed to be customized by Claude itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask Claude to change them. It reads the same files it uses, so it knows exactly what to edit.
+### Custom Values
 
-See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
+Create a `custom-values.yaml` and override defaults:
 
-## Usage
+```yaml
+chirpstack:
+  replicaCount: 2
+  chirpstack:
+    postgresql:
+      password: "your-secure-password"
+    redis:
+      password: "your-secure-password"
+  autoscaling:
+    enabled: true
+    maxReplicas: 5
 
-Career-ops is a single slash command with multiple modes:
+postgres:
+  persistence:
+    size: 50Gi
 
-```
-/career-ops                → Show all available commands
-/career-ops {paste a JD}   → Full auto-pipeline (evaluate + PDF + tracker)
-/career-ops scan           → Scan portals for new offers
-/career-ops pdf            → Generate ATS-optimized CV
-/career-ops batch          → Batch evaluate multiple offers
-/career-ops tracker        → View application status
-/career-ops apply          → Fill application forms with AI
-/career-ops pipeline       → Process pending URLs
-/career-ops contacto       → LinkedIn outreach message
-/career-ops deep           → Deep company research
-/career-ops training       → Evaluate a course/cert
-/career-ops project        → Evaluate a portfolio project
-```
-
-Or just paste a job URL or description directly -- career-ops auto-detects it and runs the full pipeline.
-
-## How It Works
-
-```
-You paste a job URL or description
-        │
-        ▼
-┌──────────────────┐
-│  Archetype       │  Classifies: LLMOps / Agentic / PM / SA / FDE / Transformation
-│  Detection       │
-└────────┬─────────┘
-         │
-┌────────▼─────────┐
-│  A-F Evaluation  │  Match, gaps, comp research, STAR stories
-│  (reads cv.md)   │
-└────────┬─────────┘
-         │
-    ┌────┼────┐
-    ▼    ▼    ▼
- Report  PDF  Tracker
-  .md   .pdf   .tsv
+redis:
+  persistence:
+    size: 20Gi
 ```
 
-## Pre-configured Portals
-
-The scanner comes with **45+ companies** ready to scan and **19 search queries** across major job boards. Copy `templates/portals.example.yml` to `portals.yml` and add your own:
-
-**AI Labs:** Anthropic, OpenAI, Mistral, Cohere, LangChain, Pinecone
-**Voice AI:** ElevenLabs, PolyAI, Parloa, Hume AI, Deepgram, Vapi, Bland AI
-**AI Platforms:** Retool, Airtable, Vercel, Temporal, Glean, Arize AI
-**Contact Center:** Ada, LivePerson, Sierra, Decagon, Talkdesk, Genesys
-**Enterprise:** Salesforce, Twilio, Gong, Dialpad
-**LLMOps:** Langfuse, Weights & Biases, Lindy, Cognigy, Speechmatics
-**Automation:** n8n, Zapier, Make.com
-**European:** Factorial, Attio, Tinybird, Clarity AI, Travelperk
-
-**Job boards searched:** Ashby, Greenhouse, Lever, Wellfound, Workable, RemoteFront
-
-## Dashboard TUI
-
-The built-in terminal dashboard lets you browse your pipeline visually:
+Install with custom values:
 
 ```bash
-cd dashboard
-go build -o career-dashboard .
-./career-dashboard --path ..
+helm install chirpstack ./chirpstack \
+  --namespace chirpstack \
+  -f custom-values.yaml
 ```
 
-Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, inline status changes.
+---
 
-## Project Structure
+## Configuration
 
-```
-career-ops/
-├── CLAUDE.md                    # Agent instructions
-├── cv.md                        # Your CV (create this)
-├── article-digest.md            # Your proof points (optional)
-├── config/
-│   └── profile.example.yml      # Template for your profile
-├── modes/                       # 14 skill modes
-│   ├── _shared.md               # Shared context (customize this)
-│   ├── oferta.md                # Single evaluation
-│   ├── pdf.md                   # PDF generation
-│   ├── scan.md                  # Portal scanner
-│   ├── batch.md                 # Batch processing
-│   └── ...
-├── templates/
-│   ├── cv-template.html         # ATS-optimized CV template
-│   ├── portals.example.yml      # Scanner config template
-│   └── states.yml               # Canonical statuses
-├── batch/
-│   ├── batch-prompt.md          # Self-contained worker prompt
-│   └── batch-runner.sh          # Orchestrator script
-├── dashboard/                   # Go TUI pipeline viewer
-├── data/                        # Your tracking data (gitignored)
-├── reports/                     # Evaluation reports (gitignored)
-├── output/                      # Generated PDFs (gitignored)
-├── fonts/                       # Space Grotesk + DM Sans
-├── docs/                        # Setup, customization, architecture
-└── examples/                    # Sample CV, report, proof points
+### Common Configuration Changes
+
+#### Enable Autoscaling
+
+```bash
+helm upgrade chirpstack ./chirpstack \
+  --set chirpstack.autoscaling.enabled=true \
+  --set chirpstack.autoscaling.maxReplicas=5
 ```
 
-## Tech Stack
+#### Change Database Credentials
 
-![Claude Code](https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
-![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white)
-![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
-![Bubble Tea](https://img.shields.io/badge/Bubble_Tea-FF75B5?style=flat&logo=go&logoColor=white)
+```bash
+kubectl patch secret chirpstack-secret \
+  -p '{"data":{"POSTGRESQL_PASSWORD":"...",
+            "REDIS_PASSWORD":"..."}}'
+```
 
-- **Agent**: Claude Code with custom skills and modes
-- **PDF**: Playwright/Puppeteer + HTML template
-- **Scanner**: Playwright + Greenhouse API + WebSearch
-- **Dashboard**: Go + Bubble Tea + Lipgloss (Catppuccin Mocha theme)
-- **Data**: Markdown tables + YAML config + TSV batch files
+#### Increase Storage
 
-## Also Open Source
+```bash
+helm upgrade postgres ./postgres \
+  --set persistence.size=100Gi
 
-- **[cv-santiago](https://github.com/santifer/cv-santiago)** -- The portfolio website (santifer.io) with AI chatbot, LLMOps dashboard, and case studies. If you need a portfolio to showcase alongside your job search, fork it and make it yours.
+helm upgrade redis ./redis \
+  --set persistence.size=50Gi
+```
 
-## About the Author
+#### Update Gateway Bridge Topics
 
-I'm Santiago -- Head of Applied AI, former founder (built and sold a business that still runs with my name on it). I built career-ops to manage my own job search. It worked: I used it to land my current role.
+Edit `chirpstack/values.yaml`:
 
-My portfolio and other open source projects → [santifer.io](https://santifer.io)
+```yaml
+gatewaybridge:
+  configMapData:
+    INTEGRATION__MQTT__EVENT_TOPIC_TEMPLATE: "custom/gateway/{{ .GatewayID }}/event"
+    INTEGRATION__MQTT__COMMAND_TOPIC_TEMPLATE: "custom/gateway/{{ .GatewayID }}/command"
+```
 
-☕ [Buy me a coffee](https://buymeacoffee.com/santifer) if career-ops helped your job search.
+### Environment-Specific Values
 
-## Star History
+Create separate value files for different environments:
 
-<a href="https://www.star-history.com/?repos=santifer%2Fcareer-ops&type=timeline&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
- </picture>
-</a>
+```
+values-dev.yaml
+values-staging.yaml
+values-prod.yaml
+```
 
-## Disclaimer
+Deploy to specific environment:
 
-**career-ops is a local, open-source tool — NOT a hosted service.** By using this software, you acknowledge:
+```bash
+helm install chirpstack ./chirpstack \
+  -f values-prod.yaml
+```
 
-1. **You control your data.** Your CV, contact info, and personal data stay on your machine and are sent directly to the AI provider you choose (Anthropic, OpenAI, etc.). We do not collect, store, or have access to any of your data.
-2. **You control the AI.** The default prompts instruct the AI not to auto-submit applications, but AI models can behave unpredictably. If you modify the prompts or use different models, you do so at your own risk. **Always review AI-generated content for accuracy before submitting.**
-3. **You comply with third-party ToS.** You must use this tool in accordance with the Terms of Service of the career portals you interact with (Greenhouse, Lever, Workday, LinkedIn, etc.). Do not use this tool to spam employers or overwhelm ATS systems.
-4. **No guarantees.** Evaluations are recommendations, not truth. AI models may hallucinate skills or experience. The authors are not liable for employment outcomes, rejected applications, account restrictions, or any other consequences.
+---
 
-See [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md) for full details. This software is provided under the [MIT License](LICENSE) "as is", without warranty of any kind.
+## Services & Networking
 
-## Contributors
+### Service Endpoints
 
-<a href="https://github.com/santifer/career-ops/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
-</a>
+| Component | Service Name | Port | Type | Purpose |
+|-----------|--------------|------|------|---------|
+| ChirpStack | `chirpstack` | 8080 | LoadBalancer | Application Server |
+| Gateway Bridge | `gateway-bridge` | 1700 | LoadBalancer | LoRa Gateway UDP |
+| Gateway Bridge BS | `gateway-bridge-basicstation` | 3001 | ClusterIP | Basic Station |
+| REST API | `rest-api` | 8090 | ClusterIP | HTTP API |
+| PostgreSQL | `postgres.chirpstack` | 5432 | ClusterIP | Database |
+| Redis | `redis.chirpstack` | 6379 | ClusterIP | Cache |
+| VerneMQ | `vernemq.vernemq` | 8883 | ClusterIP | MQTT Broker |
 
-Got hired using career-ops? [Share your story!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
+### Accessing Services
+
+**From within cluster:**
+```bash
+# Connect to ChirpStack
+curl http://chirpstack:8080
+
+# Query REST API
+curl http://rest-api:8090/api/...
+
+# Connect to PostgreSQL
+psql -h postgres.chirpstack -U chirpstack -d chirpstack
+
+# Connect to Redis
+redis-cli -h redis.chirpstack
+```
+
+**From outside cluster (for LoadBalancer services):**
+```bash
+# Get LoadBalancer IP
+kubectl get svc -n chirpstack
+
+# Connect to gateway bridge
+nc -u <EXTERNAL-IP> 1700
+```
+
+### Network Policies
+
+All services are isolated within the `chirpstack` and `vernemq` namespaces. For production, consider adding network policies:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: chirpstack-ingress
+  namespace: chirpstack
+spec:
+  podSelector:
+    matchLabels:
+      app: chirpstack
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            name: chirpstack
+      ports:
+      - protocol: TCP
+        port: 8080
+```
+
+---
+
+## Troubleshooting
+
+### Check Pod Status
+
+```bash
+# List all pods
+kubectl get pods -n chirpstack
+
+# Check logs
+kubectl logs -n chirpstack -f deployment/chirpstack
+
+# Describe pod for events
+kubectl describe pod -n chirpstack <pod-name>
+```
+
+### Database Connection Issues
+
+```bash
+# Test PostgreSQL connection
+kubectl run -it --rm debug --image=postgres:14-alpine \
+  --restart=Never -- psql -h postgres.chirpstack \
+  -U chirpstack -d chirpstack
+```
+
+### Redis Connectivity
+
+```bash
+# Test Redis connection
+kubectl run -it --rm debug --image=redis:7-alpine \
+  --restart=Never -- redis-cli -h redis.chirpstack ping
+```
+
+### MQTT Connection Issues
+
+```bash
+# Check VerneMQ logs
+kubectl logs -n vernemq -f statefulset/vernemq
+
+# Verify TLS certificates
+kubectl get secret -n chirpstack chirpstack-certs -o yaml
+```
+
+---
+
+## Production Checklist
+
+- [ ] Change all default passwords in `values.yaml`
+- [ ] Enable autoscaling for all components
+- [ ] Configure persistent volume storage (use cloud provider storage classes)
+- [ ] Set resource requests and limits
+- [ ] Configure ingress for REST API access
+- [ ] Set up monitoring with Prometheus
+- [ ] Configure logging (ELK stack or cloud provider)
+- [ ] Enable pod disruption budgets for high availability
+- [ ] Set up backup strategy for PostgreSQL
+- [ ] Review and customize network policies
+- [ ] Test failover and recovery procedures
+- [ ] Document your customizations
+
+---
 
 ## License
 
-MIT
+These Helm charts are provided as-is for deploying ChirpStack and its dependencies on Kubernetes.
 
-## Let's Connect
+---
 
-[![Website](https://img.shields.io/badge/santifer.io-000?style=for-the-badge&logo=safari&logoColor=white)](https://santifer.io)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/santifer)
-[![X](https://img.shields.io/badge/X-000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/santifer)
-[![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8pRpHETxa4)
-[![Email](https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:hi@santifer.io)
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_a_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/santifer)
+## Support
+
+For issues related to:
+- **ChirpStack**: https://github.com/chirpstack/chirpstack
+- **VerneMQ**: https://vernemq.com
+- **PostgreSQL**: https://www.postgresql.org
+- **Redis**: https://redis.io
+
+For issues with these Helm charts, please refer to the project documentation or contact your DevOps team.
